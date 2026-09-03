@@ -9,10 +9,10 @@ use Symfony\Component\Routing\Attribute\Route;
 use Doctrine\DBAL\Connection;
 
 
-class BorrowController
+class ReturnController
 {
-    #[Route('/borrowbook', methods: ['POST'])]
-    public function BorrowBook(Connection $connection, Request $request): JsonResponse
+    #[Route('/returnbook', methods: ['POST'])]
+    public function ReturnBook(Connection $connection, Request $request): JsonResponse
     {
         // Read data from request body
         $data = $request->toArray();
@@ -21,18 +21,18 @@ class BorrowController
         $userId = $data['userId'];
 
         $affectedRows = $connection->executeStatement(
-            'INSERT INTO Library_Transactions (user_id, book_id) VALUES (?, ?)',
+            'UPDATE Library_Transactions SET return_date = CURRENT_TIMESTAMP WHERE user_id = ? AND book_id = ?',
             [$userId, $bookId]
         );
 
         $connection->executeStatement(
-            'UPDATE Books set quantity = quantity - 1 WHERE book_id = (?)',
+            'UPDATE Books set quantity = quantity + 1 WHERE book_id = (?)',
             [$bookId]
         );
         
         if ($affectedRows > 0) {
             return new JsonResponse(
-                ['message' => 'Book borrowed'],
+                ['message' => 'Book Retuned'],
                 Response::HTTP_CREATED // 201
             );
         }
